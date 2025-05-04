@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>時間割アプリ</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #f8f8f8;
+    }
+
+    .timetable {
+      display: grid;
+      grid-template-columns: 60px repeat(5, 1fr); /* 時間 + 月〜金 */
+      grid-template-rows: 40px repeat(6, 1fr);    /* ヘッダー + 1限〜6限 */
+      max-width: 900px;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+      aspect-ratio: 6 / 7; /* 横6マス、縦7マスの比率 */
+    }
+
+    .cell {
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+    }
+
+    .header {
+      background-color: #e0e0e0;
+      font-weight: bold;
+    }
+
+    .time {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .timetable {
+        width: 95vw;
+        height: auto;
+        aspect-ratio: 6 / 7;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="timetable">
+    <!-- 上段ヘッダー -->
+    <div class="cell header"></div>
+    <div class="cell header">月</div>
+    <div class="cell header">火</div>
+    <div class="cell header">水</div>
+    <div class="cell header">木</div>
+    <div class="cell header">金</div>
+
+    <!-- 1限〜6限 -->
+    <!-- 時間ラベルとその行 -->
+    <!-- 1限 -->
+    <div class="cell time">1限</div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <!-- 2限 -->
+    <div class="cell time">2限</div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <!-- 3限 -->
+    <div class="cell time">3限</div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <!-- 4限 -->
+    <div class="cell time">4限</div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <!-- 5限 -->
+    <div class="cell time">5限</div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <!-- 6限 -->
+    <div class="cell time">6限</div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+  </div>
+</body>
+</html>

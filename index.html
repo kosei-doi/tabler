@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>時間割課題管理</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 1rem;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      color: #2c3e50;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      min-width: 600px;
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      width: 100px;
+      height: 70px;
+      padding: 0.5rem;
+      text-align: center;
+      border: 1px solid #e0e0e0;
+      transition: background 0.3s;
+      vertical-align: middle;
+      overflow: hidden;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+      font-size: 0.85rem;
+    }
+
+    td {
+      cursor: pointer;
+      background-color: #ffffff;
+      font-size: 0.8rem;
+    }
+
+    td:hover {
+      background-color: #ecf7ff;
+    }
+
+    .subject, .task {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .subject {
+      font-weight: bold;
+    }
+
+    .task {
+      font-size: 0.7rem;
+      margin-top: 0.25rem;
+      color: #e74c3c;
+    }
+
+    @media screen and (max-width: 500px) {
+      th, td {
+        width: 80px;
+        height: 60px;
+        font-size: 0.7rem;
+      }
+
+      .subject {
+        font-size: 0.75rem;
+      }
+
+      .task {
+        font-size: 0.65rem;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>大学時間割 × 課題管理</h1>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>限/曜</th>
+          <th>月</th>
+          <th>火</th>
+          <th>水</th>
+          <th>木</th>
+          <th>金</th>
+        </tr>
+      </thead>
+      <tbody id="timetable-body">
+        <!-- JSで自動生成 -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const subjects = [
+      ["AI概論", "物理学", "英語", "f", "情報工学"],
+      ["プログラミング", "数学Ⅱ", "", "経済学", "生物"],
+      ["", "統計", "英語", "", ""],
+      ["倫理", "", "", "心理学", "体育"],
+      ["音楽", "家庭科", "", "保健", ""]
+    ];
+
+    const tbody = document.getElementById("timetable-body");
+
+    for (let i = 0; i < 5; i++) {
+      const tr = document.createElement("tr");
+      const timeTh = document.createElement("th");
+      timeTh.textContent = `${i + 1}限`;
+      tr.appendChild(timeTh);
+
+      for (let j = 0; j < 5; j++) {
+        const td = document.createElement("td");
+        const subject = subjects[i][j] || "";
+        td.innerHTML = `<span class="subject">${subject}</span><span class="task" id="task-${i}-${j}"></span>`;
+        td.onclick = () => {
+          if (!subject) return;
+          const input = prompt(`「${subject}」（${i+1}限・${["月","火","水","木","金"][j]}）の課題を入力：`);
+          if (input) {
+            document.getElementById(`task-${i}-${j}`).textContent = "📌 " + input;
+          }
+        };
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    }
+  </script>
+
+</body>
+</html>
