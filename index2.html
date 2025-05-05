@@ -1,83 +1,84 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>時間割アプリ</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background-color: #f8f8f8;
-    }
+/* 時間割のスタイルを更新 */
+.timetable {
+  display: grid;
+  grid-template-columns: 60px repeat(5, 1fr);
+  grid-template-rows: 40px repeat(5, 1fr);
+  max-width: 1200px;
+  margin: 20px auto;
+  border: 1px solid #ccc;
+  aspect-ratio: 6 / 7;
+}
 
-    .timetable {
-      display: grid;
-      grid-template-columns: 60px repeat(5, 1fr); /* 時間 + 月〜金 */
-      grid-template-rows: 40px repeat(6, 1fr);    /* ヘッダー + 1限〜6限 */
-      max-width: 900px;
-      margin: 20px auto;
-      border: 1px solid #ccc;
-      aspect-ratio: 6 / 7; /* 横6マス、縦7マスの比率 */
-    }
+@media (min-width: 1024px) {
+  .timetable {
+    width: 90%;
+    max-width: 1200px;
+    height: calc(100vh - 200px);
+    aspect-ratio: auto;
+  }
 
-    .cell {
-      border: 1px solid #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: white;
-    }
+  .cell {
+    padding: 12px;
+  }
 
-    .header {
-      background-color: #e0e0e0;
-      font-weight: bold;
-    }
+  .title {
+    font-size: 0.8em;
+  }
 
-    .time {
-      background-color: #f0f0f0;
-      font-weight: bold;
-    }
+  /* タスク一覧のグリッドレイアウト */
+  .task-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
 
-    @media (max-width: 600px) {
-      .timetable {
-        width: 95vw;
-        height: auto;
-        aspect-ratio: 6 / 7;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="timetable">
-    <!-- 上段ヘッダー -->
-    <div class="cell header"></div>
-    <div class="cell header">月</div>
-    <div class="cell header">火</div>
-    <div class="cell header">水</div>
-    <div class="cell header">木</div>
-    <div class="cell header">金</div>
+  #active-tasks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
 
-    <!-- 1限〜6限 -->
-    <!-- 時間ラベルとその行 -->
-    <!-- 1限 -->
-    <div class="cell time">1限</div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-    <!-- 2限 -->
-    <div class="cell time">2限</div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-    <!-- 3限 -->
-    <div class="cell time">3限</div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-    <!-- 4限 -->
-    <div class="cell time">4限</div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-    <!-- 5限 -->
-    <div class="cell time">5限</div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-    <!-- 6限 -->
-    <div class="cell time">6限</div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-  </div>
-</body>
-</html>
+  .completed-tasks {
+    grid-column: 1 / -1;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+  }
+
+  #completed-tasks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .task-item {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .task-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .task-details {
+    flex-grow: 1;
+  }
+}
+
+@media (max-width: 1023px) {
+  .timetable {
+    width: 95vw;
+    height: auto;
+    aspect-ratio: 6 / 10;
+  }
+
+  .task-list {
+    padding: 0 20px;
+  }
+} 

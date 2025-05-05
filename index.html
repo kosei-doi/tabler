@@ -1,160 +1,991 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>時間割課題管理</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>時間割アプリ</title>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      onValue,
+      push,
+      get
+    } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2M27QaMYPaWK5A1-b2wwvICq5KNcTZt8",
+      authDomain: "planer-275c4.firebaseapp.com",
+      databaseURL: "https://planer-275c4-default-rtdb.firebaseio.com",
+      projectId: "planer-275c4",
+      storageBucket: "planer-275c4.firebasestorage.app",
+      messagingSenderId: "752551364905",
+      appId: "1:752551364905:web:07673595f83cea2c618f38",
+      measurementId: "G-12R593XP3D",
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+
+    // 初期の時間割データ（タイトルのみ）
+    const initialTimetableData = [
+      ['', '', '', 'CS', '微分積分'],     // 1限
+      ['Cプロ', '実験', '線形代数', '', 'ALC'],  // 2限
+      ['中国語IA', '実験', '', '憲法IB', '電磁気学A'],  // 3限
+      ['生命科学A', '実験', '', '中国語IB', '電磁気学'],  // 4限
+      ['', '実験', '力学A', 'フロンティア', '']   // 5限
+    ];
+
+    // 時間割データを初期化する関数
+    function initializeTimetable() {
+      const timetableRef = ref(db, "tabler/timetable");
+      get(timetableRef).then((snapshot) => {
+        if (!snapshot.exists()) {
+          set(timetableRef, initialTimetableData);
+        }
+      });
+    }
+
+    // 時間割データを読み込む関数
+    function loadTimetable() {
+      const timetableRef = ref(db, "tabler/timetable");
+      onValue(timetableRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          generateTimetable(data);
+        }
+      });
+    }
+
+    // タスクを保存する関数
+    function saveTask(period, day, title, taskData) {
+      const tasksRef = ref(db, "tabler/tasks");
+      const newTaskRef = push(tasksRef);
+      set(newTaskRef, {
+        period: period,
+        day: day,
+        title: title,
+        content: taskData.content,
+        dueDate: taskData.dueDate,
+        items: taskData.items,
+        level: taskData.level,
+        createdAt: Date.now()
+      });
+    }
+
+    // タスクを読み込む関数
+    function loadTasks() {
+      const tasksRef = ref(db, "tabler/tasks");
+      onValue(tasksRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          window.tasks = data; // グローバルに保存
+          displayTasks(data);
+          updateTaskNumbers(data);
+        }
+      });
+    }
+
+    // タスク数を計算して更新する関数
+    function updateTaskNumbers(tasks) {
+      const taskCounts = {};
+      
+      // タスク数を集計（完了していないタスクのみ）
+      Object.values(tasks).forEach(task => {
+        if (!task.completed) {
+          const key = `${task.period}_${task.day}_${task.title}`;
+          taskCounts[key] = (taskCounts[key] || 0) + 1;
+        }
+      });
+
+      // 時間割の各セルのタスク数を更新
+      const cells = document.querySelectorAll('.cell:not(.header):not(.time)');
+      cells.forEach(cell => {
+        const title = cell.querySelector('.title')?.textContent;
+        if (title) {
+          const period = cell.getAttribute('data-period');
+          const day = cell.getAttribute('data-day');
+          const key = `${period}_${day}_${title}`;
+          const count = taskCounts[key] || 0;
+
+          // 既存の数値表示を削除
+          const existingCircle = cell.querySelector('.number-circle');
+          if (existingCircle) {
+            existingCircle.remove();
+          }
+
+          // タスク数が0より大きい場合のみ表示
+          if (count > 0) {
+            const numberCircle = document.createElement('div');
+            numberCircle.className = 'number-circle';
+            numberCircle.textContent = count;
+            numberCircle.addEventListener('click', (e) => {
+              e.stopPropagation(); // セルのクリックイベントを防止
+              showTaskPopup(period, day, title);
+            });
+            cell.appendChild(numberCircle);
+          }
+        }
+      });
+    }
+
+    // 時間割を生成する関数
+    function generateTimetable(timetableData) {
+      const timetable = document.getElementById('timetable');
+      timetable.innerHTML = ''; // 既存の内容をクリア
+
+      // ヘッダーを追加
+      const days = ['月', '火', '水', '木', '金'];
+      const headerCell = document.createElement('div');
+      headerCell.className = 'cell header';
+      timetable.appendChild(headerCell);
+
+      days.forEach(day => {
+        const cell = document.createElement('div');
+        cell.className = 'cell header';
+        cell.textContent = day;
+        timetable.appendChild(cell);
+      });
+
+      const periods = ['1限', '2限', '3限', '4限', '5限'];
+      periods.forEach((period, periodIndex) => {
+        // 時間ラベル
+        const timeCell = document.createElement('div');
+        timeCell.className = 'cell time';
+        timeCell.textContent = period;
+        timetable.appendChild(timeCell);
+
+        // 各曜日のセル
+        days.forEach((day, dayIndex) => {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.setAttribute('data-period', period);
+          cell.setAttribute('data-day', day);
+          
+          const title = document.createElement('div');
+          title.className = 'title';
+          title.textContent = timetableData[periodIndex][dayIndex];
+          cell.appendChild(title);
+
+          // タイトルが存在する場合のみクリックイベントを追加
+          if (timetableData[periodIndex][dayIndex]) {
+            cell.addEventListener('click', () => {
+              showTaskModal(period, day, timetableData[periodIndex][dayIndex]);
+            });
+          }
+          
+          timetable.appendChild(cell);
+        });
+      });
+    }
+
+    // モーダルを表示する関数
+    function showTaskModal(period, day, title) {
+      const modal = document.getElementById('taskModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalSubtitle = document.getElementById('modalSubtitle');
+
+      modalTitle.textContent = title;
+      modalSubtitle.textContent = `${period} ${day}`;
+      modal.style.display = 'block';
+
+      // デフォルトで来週の日付を設定
+      const dateInput = document.getElementById('taskDate');
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      dateInput.value = nextWeek.toISOString().split('T')[0];
+    }
+
+    // 日付を設定する関数
+    function setDate(type) {
+      const dateInput = document.getElementById('taskDate');
+      const today = new Date();
+      
+      switch(type) {
+        case 'today':
+          dateInput.value = today.toISOString().split('T')[0];
+          break;
+        case 'tomorrow':
+          today.setDate(today.getDate() + 1);
+          dateInput.value = today.toISOString().split('T')[0];
+          break;
+        case 'nextWeek':
+          today.setDate(today.getDate() + 7);
+          dateInput.value = today.toISOString().split('T')[0];
+          break;
+      }
+    }
+
+    // フォーム送信時の処理
+    document.getElementById('taskForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const taskData = {
+        content: document.getElementById('taskContent').value,
+        dueDate: document.getElementById('taskDate').value,
+        items: Array.from(document.getElementById('taskItems').selectedOptions).map(option => option.value),
+        level: document.getElementById('taskLevel').value
+      };
+
+      const modalTitle = document.getElementById('modalTitle').textContent;
+      const modalSubtitle = document.getElementById('modalSubtitle').textContent;
+      const [period, day] = modalSubtitle.split(' ');
+
+      saveTask(period, day, modalTitle, taskData);
+      
+      document.getElementById('taskModal').style.display = 'none';
+      this.reset();
+    });
+
+    // モーダル外クリックで閉じる
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('taskModal');
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeTimetable();
+      loadTimetable();
+      loadTasks();
+    });
+
+    // グローバルスコープに関数を公開
+    window.setDate = setDate;
+
+    // タスクの完了状態を更新する関数
+    function updateTaskCompletion(taskId, completed) {
+      const taskRef = ref(db, `tabler/tasks/${taskId}`);
+      set(taskRef, {
+        ...tasks[taskId],
+        completed: completed,
+        completedAt: completed ? Date.now() : null
+      });
+    }
+
+    // タスク一覧を表示する関数
+    function displayTasks(tasks) {
+      const activeTasksContainer = document.getElementById('active-tasks');
+      const completedTasksContainer = document.getElementById('completed-tasks');
+      activeTasksContainer.innerHTML = '';
+      completedTasksContainer.innerHTML = '';
+
+      // タスクを期限順にソート
+      const sortedTasks = Object.entries(tasks).sort(([, a], [, b]) => {
+        return new Date(a.dueDate) - new Date(b.dueDate);
+      });
+
+      sortedTasks.forEach(([taskId, task]) => {
+        const taskElement = createTaskElement(taskId, task);
+        if (task.completed) {
+          completedTasksContainer.appendChild(taskElement);
+        } else {
+          activeTasksContainer.appendChild(taskElement);
+        }
+      });
+    }
+
+    // タスク要素を作成する関数
+    function createTaskElement(taskId, task) {
+      const div = document.createElement('div');
+      div.className = 'task-item';
+      if (task.completed) {
+        div.classList.add('completed');
+      }
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'task-checkbox';
+      checkbox.checked = task.completed || false;
+      checkbox.addEventListener('change', () => {
+        updateTaskCompletion(taskId, checkbox.checked);
+      });
+
+      const content = document.createElement('div');
+      content.className = 'task-content';
+
+      const title = document.createElement('div');
+      title.className = 'task-title';
+      title.textContent = `${task.title} (${task.period} ${task.day})`;
+
+      const details = document.createElement('div');
+      details.className = 'task-details';
+      details.textContent = task.content || '';
+
+      const meta = document.createElement('div');
+      meta.className = 'task-meta';
+
+      const dueDate = document.createElement('span');
+      dueDate.className = 'due-date';
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const taskDate = new Date(task.dueDate);
+      taskDate.setHours(0, 0, 0, 0);
+
+      if (taskDate < today) {
+        dueDate.classList.add('due-date-overdue');
+      } else if (taskDate.getTime() === today.getTime()) {
+        dueDate.classList.add('due-date-today');
+      } else if (taskDate.getTime() === new Date(today.getTime() + 86400000).getTime()) {
+        dueDate.classList.add('due-date-tomorrow');
+      } else if (taskDate <= new Date(today.getTime() + 7 * 86400000)) {
+        dueDate.classList.add('due-date-week');
+      }
+
+      dueDate.textContent = `期限: ${formatDueDate(task.dueDate)}`;
+
+      const level = document.createElement('span');
+      level.className = `task-level task-level-${task.level || 1}`;
+      level.textContent = `レベル${task.level || 1}`;
+
+      const items = document.createElement('div');
+      items.className = 'task-items';
+      if (task.items && Array.isArray(task.items)) {
+        task.items.forEach(item => {
+          const itemTag = document.createElement('span');
+          itemTag.className = 'task-item-tag';
+          itemTag.textContent = item;
+          items.appendChild(itemTag);
+        });
+      }
+
+      meta.appendChild(dueDate);
+      meta.appendChild(level);
+      content.appendChild(title);
+      content.appendChild(details);
+      content.appendChild(meta);
+      content.appendChild(items);
+
+      div.appendChild(checkbox);
+      div.appendChild(content);
+
+      return div;
+    }
+
+    // タブ切り替えの処理
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // タブのアクティブ状態を更新
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // コンテンツの表示を切り替え
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+      });
+    });
+
+    // 期限の表示形式を変更する関数
+    function formatDueDate(date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const taskDate = new Date(date);
+      taskDate.setHours(0, 0, 0, 0);
+
+      if (taskDate < today) {
+        return '期限切れ';
+      } else if (taskDate.getTime() === today.getTime()) {
+        return '今日';
+      } else if (taskDate.getTime() === tomorrow.getTime()) {
+        return '明日';
+      } else {
+        const diffDays = Math.floor((taskDate - today) / (1000 * 60 * 60 * 24));
+        return `${diffDays}日後`;
+      }
+    }
+
+    // タスク一覧ポップアップを表示する関数
+    function showTaskPopup(period, day, title) {
+      const popup = document.createElement('div');
+      popup.className = 'task-popup';
+      popup.innerHTML = `
+        <div class="task-popup-content">
+          <div class="task-popup-header">
+            <h2>${title}</h2>
+            <p>${period} ${day}</p>
+          </div>
+          <div class="task-popup-list" id="taskPopupList"></div>
+        </div>
+      `;
+
+      document.body.appendChild(popup);
+      popup.style.display = 'block';
+
+      // タスクを表示
+      const taskList = document.getElementById('taskPopupList');
+      const tasks = Object.entries(window.tasks || {})
+        .filter(([, task]) => 
+          !task.completed && 
+          task.period === period && 
+          task.day === day && 
+          task.title === title
+        )
+        .sort(([, a], [, b]) => new Date(a.dueDate) - new Date(b.dueDate));
+
+      tasks.forEach(([taskId, task]) => {
+        const taskElement = createTaskElement(taskId, task);
+        taskList.appendChild(taskElement);
+      });
+
+      // ポップアップ外クリックで閉じる
+      popup.addEventListener('click', (e) => {
+        if (e.target === popup) {
+          popup.remove();
+        }
+      });
+    }
+  </script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f5f7fa;
       margin: 0;
-      padding: 1rem;
-      color: #333;
+      font-family: sans-serif;
+      background-color: #f8f8f8;
     }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-      color: #2c3e50;
+    .timetable {
+      display: grid;
+      grid-template-columns: 60px repeat(5, 1fr);
+      grid-template-rows: 40px repeat(5, 1fr);
+      max-width: 1200px;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+      aspect-ratio: 6 / 7;
     }
 
-    .table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      min-width: 600px;
-      width: 100%;
-      border-collapse: collapse;
+    .cell {
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background-color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    th, td {
-      width: 100px;
-      height: 70px;
-      padding: 0.5rem;
-      text-align: center;
-      border: 1px solid #e0e0e0;
-      transition: background 0.3s;
-      vertical-align: middle;
-      overflow: hidden;
-    }
-
-    th {
-      background-color: #3498db;
-      color: white;
-      font-size: 0.85rem;
-    }
-
-    td {
+      padding: 8px;
+      flex-direction: column;
+      position: relative;
       cursor: pointer;
-      background-color: #ffffff;
-      font-size: 0.8rem;
     }
 
-    td:hover {
-      background-color: #ecf7ff;
+    .cell:hover {
+      background-color: #f5f5f5;
     }
 
-    .subject, .task {
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .title {
+      font-weight: bold;
+      margin-bottom: 4px;
+      text-align: center;
+      font-size: 0.6em;
     }
 
-    .subject {
+    .number-circle {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 24px;
+      height: 24px;
+      background-color: #ff4444;
+      border-radius: 50%;
+      color: white;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .number-circle:hover {
+      transform: scale(1.1);
+    }
+
+    .content {
+      font-size: 0.9em;
+      color: #666;
+      text-align: center;
+    }
+
+    .header {
+      background-color: #4CAF50;
+      color: white;
       font-weight: bold;
     }
 
-    .task {
-      font-size: 0.7rem;
-      margin-top: 0.25rem;
-      color: #e74c3c;
+    .time {
+      background-color: #e8f5e9;
+      font-weight: bold;
     }
 
-    @media screen and (max-width: 500px) {
-      th, td {
-        width: 80px;
-        height: 60px;
-        font-size: 0.7rem;
+    /* モーダル関連のスタイル */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 500px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.2em;
+      color: #333;
+    }
+
+    .modal-header p {
+      margin: 5px 0 0;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    .form-group input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .date-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .date-buttons button {
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f8f8f8;
+      cursor: pointer;
+    }
+
+    .date-buttons button:hover {
+      background-color: #eee;
+    }
+
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+    }
+
+    .submit-button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+
+    .submit-button:hover {
+      background-color: #45a049;
+    }
+
+    @media (min-width: 1024px) {
+      .timetable {
+        width: 90%;
+        max-width: 1200px;
+        height: calc(100vh - 200px);
+        aspect-ratio: auto;
       }
 
-      .subject {
-        font-size: 0.75rem;
+      .cell {
+        padding: 12px;
       }
 
-      .task {
-        font-size: 0.65rem;
+      .title {
+        font-size: 0.8em;
       }
 
-      h1 {
-        font-size: 1.2rem;
+      .number-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        top: 4px;
+        right: 4px;
       }
+
+      /* タスク一覧のグリッドレイアウト */
+      .task-list {
+        display: block;
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      #active-tasks {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px;
+      }
+
+      .completed-tasks {
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 2px solid #eee;
+      }
+
+      #completed-tasks {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px;
+      }
+
+      .task-item {
+        height: 100%;
+        display: flex;
+        align-items: flex-start;
+        padding: 25px;
+        margin-bottom: 0;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      }
+
+      .task-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .task-details {
+        flex-grow: 1;
+        margin: 0;
+        line-height: 1.5;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      .timetable {
+        width: 95vw;
+        height: auto;
+        aspect-ratio: 6 / 10;
+      }
+
+      .task-list {
+        padding: 0 20px;
+      }
+    }
+
+    /* タブ関連のスタイル */
+    .tabs {
+      display: flex;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .tab {
+      padding: 15px 30px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      flex: 1;
+      text-align: center;
+      max-width: 200px;
+    }
+
+    .tab.active {
+      border-bottom-color: #4CAF50;
+      color: #4CAF50;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* タスク一覧のスタイル */
+    .task-list {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background: white;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .task-checkbox {
+      margin-right: 15px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .task-content {
+      flex-grow: 1;
+    }
+
+    .task-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .task-details {
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 15px;
+      margin-top: 5px;
+      font-size: 0.8em;
+      color: #888;
+    }
+
+    .task-level {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      background: #e0e0e0;
+    }
+
+    .task-level-1 { background: #e8f5e9; color: #2e7d32; }
+    .task-level-2 { background: #fff3e0; color: #ef6c00; }
+    .task-level-3 { background: #ffebee; color: #c62828; }
+
+    .completed-tasks {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #eee;
+    }
+
+    .completed-tasks .task-item {
+      opacity: 0.7;
+      text-decoration: line-through;
+    }
+
+    .task-items {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+    }
+
+    .task-item-tag {
+      background: #f0f0f0;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+    }
+
+    /* 期限の色分けスタイル */
+    .due-date {
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .due-date-today {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    .due-date-tomorrow {
+      background-color: #fff3e0;
+      color: #ef6c00;
+    }
+
+    .due-date-week {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .due-date-overdue {
+      background-color: #b71c1c;
+      color: white;
+      font-weight: bold;
+    }
+
+    /* タスク一覧ポップアップのスタイル */
+    .task-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .task-popup-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .task-popup-header {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .task-popup-header h2 {
+      margin: 0;
+      font-size: 1.2em;
+      color: #333;
+    }
+
+    .task-popup-header p {
+      margin: 5px 0 0;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .task-popup-list {
+      margin-top: 15px;
+    }
+
+    .task-popup-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .task-popup-item:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
 <body>
-
-  <h1>大学時間割 × 課題管理</h1>
-
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>限/曜</th>
-          <th>月</th>
-          <th>火</th>
-          <th>水</th>
-          <th>木</th>
-          <th>金</th>
-        </tr>
-      </thead>
-      <tbody id="timetable-body">
-        <!-- JSで自動生成 -->
-      </tbody>
-    </table>
+  <!-- タブ -->
+  <div class="tabs">
+    <div class="tab active" data-tab="timetable">時間割</div>
+    <div class="tab" data-tab="tasks">タスク</div>
   </div>
 
-  <script>
-    const subjects = [
-      ["AI概論", "物理学", "英語", "f", "情報工学"],
-      ["プログラミング", "数学Ⅱ", "", "経済学", "生物"],
-      ["", "統計", "英語", "", ""],
-      ["倫理", "", "", "心理学", "体育"],
-      ["音楽", "家庭科", "", "保健", ""]
-    ];
+  <!-- 時間割タブ -->
+  <div class="tab-content active" id="timetable-tab">
+    <div class="timetable" id="timetable">
+      <!-- 時間割の内容はJavaScriptで生成 -->
+    </div>
+  </div>
 
-    const tbody = document.getElementById("timetable-body");
+  <!-- タスクタブ -->
+  <div class="tab-content" id="tasks-tab">
+    <div class="task-list">
+      <div id="active-tasks">
+        <!-- 未完了タスクはここに表示 -->
+      </div>
+      <div class="completed-tasks">
+        <h3>完了したタスク</h3>
+        <div id="completed-tasks">
+          <!-- 完了タスクはここに表示 -->
+        </div>
+      </div>
+    </div>
+  </div>
 
-    for (let i = 0; i < 5; i++) {
-      const tr = document.createElement("tr");
-      const timeTh = document.createElement("th");
-      timeTh.textContent = `${i + 1}限`;
-      tr.appendChild(timeTh);
-
-      for (let j = 0; j < 5; j++) {
-        const td = document.createElement("td");
-        const subject = subjects[i][j] || "";
-        td.innerHTML = `<span class="subject">${subject}</span><span class="task" id="task-${i}-${j}"></span>`;
-        td.onclick = () => {
-          if (!subject) return;
-          const input = prompt(`「${subject}」（${i+1}限・${["月","火","水","木","金"][j]}）の課題を入力：`);
-          if (input) {
-            document.getElementById(`task-${i}-${j}`).textContent = "📌 " + input;
-          }
-        };
-        tr.appendChild(td);
-      }
-
-      tbody.appendChild(tr);
-    }
-  </script>
-
+  <!-- タスク追加モーダル -->
+  <div id="taskModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <p id="modalSubtitle"></p>
+      </div>
+      <form id="taskForm">
+        <div class="form-group">
+          <label for="taskContent">内容</label>
+          <input type="text" id="taskContent" required>
+        </div>
+        <div class="form-group">
+          <label>期限</label>
+          <div class="date-buttons">
+            <button type="button" onclick="setDate('today')">今日</button>
+            <button type="button" onclick="setDate('tomorrow')">明日</button>
+            <button type="button" onclick="setDate('nextWeek')">来週</button>
+          </div>
+          <input type="date" id="taskDate" required>
+        </div>
+        <div class="form-group">
+          <label for="taskItems">使用物</label>
+          <select id="taskItems" multiple>
+            <option value="pc">PC</option>
+            <option value="notebook">ノート</option>
+            <option value="textbook">教科書</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="taskLevel">レベル</label>
+          <select id="taskLevel" required>
+            <option value="1">レベル1</option>
+            <option value="2">レベル2</option>
+            <option value="3">レベル3</option>
+          </select>
+        </div>
+        <button type="submit" class="submit-button">追加</button>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
