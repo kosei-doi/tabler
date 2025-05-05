@@ -40,7 +40,7 @@
       ['Cプロ', '実験', '線形代数', '', 'ALC'],  // 2限
       ['中国語IA', '実験', '', '憲法IB', '電磁気学A'],  // 3限
       ['生命科学A', '実験', '', '中国語IB', '電磁気学'],  // 4限
-      ['', '実験', '力学A', 'フロンティア', '']   // 5限
+      ['', '実験', '力学A', '電生', '']   // 5限
     ];
 
     // 時間割データを初期化する関数
@@ -147,27 +147,70 @@
       headerCell.className = 'cell header';
       timetable.appendChild(headerCell);
 
+      // 現在の曜日と時間を取得
+      const now = new Date();
+      const currentDay = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTime = currentHour * 60 + currentMinute;
+
       days.forEach(day => {
         const cell = document.createElement('div');
         cell.className = 'cell header';
+        if (day === currentDay) {
+          cell.classList.add('current-day-header');
+        }
         cell.textContent = day;
         timetable.appendChild(cell);
       });
 
-      const periods = ['1限', '2限', '3限', '4限', '5限'];
+      const periods = [
+        { name: '1限', time: '8:00-10:30' },
+        { name: '2限', time: '10:40-12:20' },
+        { name: '3限', time: '13:10-14:50' },
+        { name: '4限', time: '15:50-16:45' },
+        { name: '5限', time: '17:00-18:40' }
+      ];
+
+      // 各限の時間範囲を分に変換
+      const periodTimes = periods.map(period => {
+        const [start, end] = period.time.split('-');
+        const [startHour, startMinute] = start.split(':').map(Number);
+        const [endHour, endMinute] = end.split(':').map(Number);
+        return {
+          start: startHour * 60 + startMinute,
+          end: endHour * 60 + endMinute
+        };
+      });
+
       periods.forEach((period, periodIndex) => {
         // 時間ラベル
         const timeCell = document.createElement('div');
         timeCell.className = 'cell time';
-        timeCell.textContent = period;
+        const periodName = document.createElement('div');
+        periodName.className = 'period-name';
+        periodName.textContent = period.name;
+        const periodTime = document.createElement('div');
+        periodTime.className = 'period-time';
+        periodTime.textContent = period.time;
+        timeCell.appendChild(periodName);
+        timeCell.appendChild(periodTime);
         timetable.appendChild(timeCell);
 
         // 各曜日のセル
         days.forEach((day, dayIndex) => {
           const cell = document.createElement('div');
           cell.className = 'cell';
-          cell.setAttribute('data-period', period);
+          cell.setAttribute('data-period', period.name);
           cell.setAttribute('data-day', day);
+          
+          // 現在の曜日と時間に基づいてクラスを追加
+          if (day === currentDay) {
+            const periodTime = periodTimes[periodIndex];
+            if (currentTime >= periodTime.start && currentTime <= periodTime.end) {
+              cell.classList.add('current-period');
+            }
+          }
           
           const title = document.createElement('div');
           title.className = 'title';
@@ -177,7 +220,7 @@
           // タイトルが存在する場合のみクリックイベントを追加
           if (timetableData[periodIndex][dayIndex]) {
             cell.addEventListener('click', () => {
-              showTaskModal(period, day, timetableData[periodIndex][dayIndex]);
+              showTaskModal(period.name, day, timetableData[periodIndex][dayIndex]);
             });
           }
           
@@ -196,9 +239,10 @@
       modalSubtitle.textContent = `${period} ${day}`;
       modal.style.display = 'block';
 
-      // デフォルトで来週の日付を設定
+      // デフォルトで来週の日付を設定（日本時間）
       const dateInput = document.getElementById('taskDate');
       const nextWeek = new Date();
+      nextWeek.setTime(nextWeek.getTime() + (9 * 60 * 60 * 1000)); // 日本時間に調整
       nextWeek.setDate(nextWeek.getDate() + 7);
       dateInput.value = nextWeek.toISOString().split('T')[0];
     }
@@ -207,18 +251,20 @@
     function setDate(type) {
       const dateInput = document.getElementById('taskDate');
       const today = new Date();
+      // 日本時間に調整
+      const jpTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
       
       switch(type) {
         case 'today':
-          dateInput.value = today.toISOString().split('T')[0];
+          dateInput.value = jpTime.toISOString().split('T')[0];
           break;
         case 'tomorrow':
-          today.setDate(today.getDate() + 1);
-          dateInput.value = today.toISOString().split('T')[0];
+          jpTime.setDate(jpTime.getDate() + 1);
+          dateInput.value = jpTime.toISOString().split('T')[0];
           break;
         case 'nextWeek':
-          today.setDate(today.getDate() + 7);
-          dateInput.value = today.toISOString().split('T')[0];
+          jpTime.setDate(jpTime.getDate() + 7);
+          dateInput.value = jpTime.toISOString().split('T')[0];
           break;
       }
     }
@@ -476,6 +522,7 @@
       flex-direction: column;
       position: relative;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
 
     .cell:hover {
@@ -486,7 +533,8 @@
       font-weight: bold;
       margin-bottom: 4px;
       text-align: center;
-      font-size: 0.6em;
+      font-size: 0.8em;
+      line-height: 1.2;
     }
 
     .number-circle {
@@ -523,9 +571,38 @@
       font-weight: bold;
     }
 
+    .current-day-header {
+      background-color: #388e3c;
+    }
+
     .time {
       background-color: #e8f5e9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .period-name {
       font-weight: bold;
+      font-size: 0.9em;
+      margin-bottom: 2px;
+    }
+
+    .period-time {
+      font-size: 0.65em;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    .current-day {
+      background-color: #e3f2fd;
+    }
+
+    .current-period {
+      background-color: #e8f5e9;
+      border: 2px solid #4CAF50;
     }
 
     /* モーダル関連のスタイル */
