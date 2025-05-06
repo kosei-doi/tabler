@@ -306,7 +306,7 @@
         daysUntilNextClass = subjectDay + 1;
       } else {
         daysUntilNextClass = subjectDay - currentDay;
-        if (daysUntilNextClass <= 0) {
+        if (daysUntilNextClass < 0) {
           daysUntilNextClass += 7;
         }
       }
