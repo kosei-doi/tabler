@@ -39,9 +39,26 @@
       ['', '', '', 'CS', '微分積分'],     // 1限
       ['Cプロ', '実験', '線形代数', '', 'ALC'],  // 2限
       ['中国語IA', '実験', '', '憲法IB', '電磁気学A'],  // 3限
-      ['生命科学A', '実験', '', '中国語IB', '電磁気学'],  // 4限
+      ['生命科学A', '実験', '', '中国語IB', '電磁気学A'],  // 4限
       ['', '実験', '力学A', '電生', '']   // 5限
     ];
+
+    // 科目ごとの背景色を定義
+    const subjectColors = {
+      'CS': '#e3f2fd',
+      '微分積分': '#e8f5e9',
+      'Cプロ': '#fff3e0',
+      '実験': '#f3e5f5',
+      '線形代数': '#e8f5e9',
+      '中国語IA': '#e0f7fa',
+      '中国語IB': '#e0f7fa',
+      '憲法IB': '#fce4ec',
+      '電磁気学A': '#e8eaf6',
+      '電生': '#ede7f6',
+      '生命科学A': '#f1f8e9',
+      '力学A': '#fff8e1',
+      'ALC': '#e3f2fd'
+    };
 
     // 時間割データを初期化する関数
     function initializeTimetable() {
@@ -76,6 +93,7 @@
         dueDate: taskData.dueDate,
         items: taskData.items,
         level: taskData.level,
+        taskType: taskData.taskType,
         createdAt: Date.now()
       });
     }
@@ -96,12 +114,18 @@
     // タスク数を計算して更新する関数
     function updateTaskNumbers(tasks) {
       const taskCounts = {};
+      const earliestDueDates = {};
       
       // タスク数を集計（完了していないタスクのみ）
       Object.values(tasks).forEach(task => {
         if (!task.completed) {
           const key = `${task.period}_${task.day}_${task.title}`;
           taskCounts[key] = (taskCounts[key] || 0) + 1;
+          
+          // 最も早い期限を記録
+          if (!earliestDueDates[key] || new Date(task.dueDate) < new Date(earliestDueDates[key])) {
+            earliestDueDates[key] = task.dueDate;
+          }
         }
       });
 
@@ -126,8 +150,32 @@
             const numberCircle = document.createElement('div');
             numberCircle.className = 'number-circle';
             numberCircle.textContent = count;
+            
+            // 期限に応じて色を設定
+            const dueDate = earliestDueDates[key];
+            if (dueDate) {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const taskDate = new Date(dueDate);
+              taskDate.setHours(0, 0, 0, 0);
+              const weekLater = new Date(today);
+              weekLater.setDate(weekLater.getDate() + 7);
+
+              if (taskDate < today) {
+                numberCircle.classList.add('due-date-overdue');
+              } else if (taskDate.getTime() === today.getTime()) {
+                numberCircle.classList.add('due-date-today');
+              } else if (taskDate.getTime() === new Date(today.getTime() + 86400000).getTime()) {
+                numberCircle.classList.add('due-date-tomorrow');
+              } else if (taskDate <= weekLater) {
+                numberCircle.classList.add('due-date-week');
+              } else {
+                numberCircle.classList.add('due-date-future');
+              }
+            }
+
             numberCircle.addEventListener('click', (e) => {
-              e.stopPropagation(); // セルのクリックイベントを防止
+              e.stopPropagation();
               showTaskPopup(period, day, title);
             });
             cell.appendChild(numberCircle);
@@ -214,19 +262,84 @@
           
           const title = document.createElement('div');
           title.className = 'title';
-          title.textContent = timetableData[periodIndex][dayIndex];
+          const subjectName = timetableData[periodIndex][dayIndex];
+          title.textContent = subjectName;
+          
+          // 科目に応じた背景色を設定
+          if (subjectName && subjectColors[subjectName]) {
+            cell.style.backgroundColor = subjectColors[subjectName];
+          }
+          
           cell.appendChild(title);
 
           // タイトルが存在する場合のみクリックイベントを追加
-          if (timetableData[periodIndex][dayIndex]) {
+          if (subjectName) {
             cell.addEventListener('click', () => {
-              showTaskModal(period.name, day, timetableData[periodIndex][dayIndex]);
+              showTaskModal(period.name, day, subjectName);
             });
           }
           
           timetable.appendChild(cell);
         });
       });
+    }
+
+    // 日付を設定する関数
+    function setDate(type) {
+      const modalSubtitle = document.getElementById('modalSubtitle').textContent;
+      const [period, day] = modalSubtitle.split(' ');
+      
+      // 曜日を数値に変換（月=1, 火=2, ..., 金=5）
+      const dayMap = { '月': 1, '火': 2, '水': 3, '木': 4, '金': 5 };
+      const subjectDay = dayMap[day];
+      
+      // 現在の日付を日本時間で取得
+      const today = new Date();
+      const jstToday = new Date(today.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+      const currentDay = jstToday.getDay(); // 0=日曜, 1=月曜, ..., 6=土曜
+      
+      // 次の授業日までの日数を計算
+      let daysUntilNextClass;
+      if (currentDay === 0) { // 日曜日の場合
+        daysUntilNextClass = subjectDay;
+      } else if (currentDay === 6) { // 土曜日の場合
+        daysUntilNextClass = subjectDay + 1;
+      } else {
+        daysUntilNextClass = subjectDay - currentDay;
+        if (daysUntilNextClass <= 0) {
+          daysUntilNextClass += 7;
+        }
+      }
+      
+      // 期限の日付を計算
+      const deadline = new Date(jstToday);
+      switch (type) {
+        case 'previous':
+          // 前日: 授業日の前日
+          deadline.setDate(jstToday.getDate() + daysUntilNextClass - 1);
+          break;
+        case 'current':
+          // 当日: 授業日
+          deadline.setDate(jstToday.getDate() + daysUntilNextClass);
+          break;
+        case 'next':
+          // 後日: 授業日の翌日
+          deadline.setDate(jstToday.getDate() + daysUntilNextClass + 1);
+          break;
+        case 'nextWeek':
+          // 次週: 来週の授業日の前日
+          deadline.setDate(jstToday.getDate() + daysUntilNextClass + 6);
+          break;
+      }
+      
+      // 日付をYYYY-MM-DD形式に変換（日本時間）
+      const year = deadline.getFullYear();
+      const month = String(deadline.getMonth() + 1).padStart(2, '0');
+      const date = String(deadline.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${date}`;
+      
+      // 日付入力フィールドに設定
+      document.getElementById('taskDate').value = formattedDate;
     }
 
     // モーダルを表示する関数
@@ -239,45 +352,23 @@
       modalSubtitle.textContent = `${period} ${day}`;
       modal.style.display = 'block';
 
-      // デフォルトで来週の日付を設定（日本時間）
-      const dateInput = document.getElementById('taskDate');
-      const nextWeek = new Date();
-      nextWeek.setTime(nextWeek.getTime() + (9 * 60 * 60 * 1000)); // 日本時間に調整
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      dateInput.value = nextWeek.toISOString().split('T')[0];
-    }
-
-    // 日付を設定する関数
-    function setDate(type) {
-      const dateInput = document.getElementById('taskDate');
-      const today = new Date();
-      // 日本時間に調整
-      const jpTime = new Date(today.getTime() + (9 * 60 * 60 * 1000));
-      
-      switch(type) {
-        case 'today':
-          dateInput.value = jpTime.toISOString().split('T')[0];
-          break;
-        case 'tomorrow':
-          jpTime.setDate(jpTime.getDate() + 1);
-          dateInput.value = jpTime.toISOString().split('T')[0];
-          break;
-        case 'nextWeek':
-          jpTime.setDate(jpTime.getDate() + 7);
-          dateInput.value = jpTime.toISOString().split('T')[0];
-          break;
-      }
+      // デフォルトで次週を選択
+      setDate('nextWeek');
     }
 
     // フォーム送信時の処理
     document.getElementById('taskForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
+      const taskContent = document.getElementById('taskContent').value;
+      const selectedTaskType = document.querySelector('.task-type-btn.active')?.dataset.type;
+      
       const taskData = {
-        content: document.getElementById('taskContent').value,
+        content: taskContent || (selectedTaskType ? selectedTaskType : '演習課題'),
         dueDate: document.getElementById('taskDate').value,
         items: Array.from(document.getElementById('taskItems').selectedOptions).map(option => option.value),
-        level: document.getElementById('taskLevel').value
+        level: document.getElementById('taskLevel').value,
+        taskType: taskContent ? null : selectedTaskType
       };
 
       const modalTitle = document.getElementById('modalTitle').textContent;
@@ -288,6 +379,8 @@
       
       document.getElementById('taskModal').style.display = 'none';
       this.reset();
+      // デフォルトで演習課題を選択状態に
+      document.querySelector('[data-type="演習課題"]').classList.add('active');
     });
 
     // モーダル外クリックで閉じる
@@ -346,6 +439,11 @@
       div.className = 'task-item';
       if (task.completed) {
         div.classList.add('completed');
+      }
+
+      // 課題タイプに応じたクラスを追加
+      if (task.taskType) {
+        div.classList.add(`task-type-${task.taskType}`);
       }
 
       const checkbox = document.createElement('input');
@@ -494,6 +592,14 @@
         }
       });
     }
+
+    // 課題タイプボタンの切り替え
+    document.querySelectorAll('.task-type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.task-type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
   </script>
   <style>
     body {
@@ -553,6 +659,7 @@
       font-weight: bold;
       cursor: pointer;
       transition: transform 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .number-circle:hover {
@@ -916,24 +1023,28 @@
     }
 
     .due-date-today {
-      background-color: #ffebee;
-      color: #c62828;
+      background-color: #c62828;
+      color: white;
     }
 
     .due-date-tomorrow {
-      background-color: #fff3e0;
-      color: #ef6c00;
+      background-color: #ef6c00;
+      color: white;
     }
 
     .due-date-week {
-      background-color: #e3f2fd;
-      color: #1565c0;
+      background-color: #1565c0;
+      color: white;
     }
 
     .due-date-overdue {
       background-color: #b71c1c;
       color: white;
-      font-weight: bold;
+    }
+
+    .due-date-future {
+      background-color: #9e9e9e;
+      color: white;
     }
 
     /* タスク一覧ポップアップのスタイル */
@@ -992,6 +1103,60 @@
     .task-popup-item:last-child {
       border-bottom: none;
     }
+
+    .task-type-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .task-type-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f8f8f8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task-type-btn.active {
+      background-color: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+
+    .task-type-演習課題 {
+      border-left: 4px solid #4CAF50;
+    }
+
+    .task-type-予習課題 {
+      border-left: 4px solid #2196f3;
+    }
+
+    .task-type-追加演習 {
+      border-left: 4px solid #ff9800;
+    }
+
+    .number-circle.due-date-overdue {
+      background-color: #d32f2f;
+    }
+
+    .number-circle.due-date-today {
+      background-color: #f44336;
+    }
+
+    .number-circle.due-date-tomorrow {
+      background-color: #ff9800;
+    }
+
+    .number-circle.due-date-week {
+      background-color: #2196f3;
+    }
+
+    .number-circle.due-date-future {
+      background-color: #9e9e9e;
+    }
   </style>
 </head>
 <body>
@@ -1032,15 +1197,24 @@
       </div>
       <form id="taskForm">
         <div class="form-group">
+          <label>課題タイプ</label>
+          <div class="task-type-buttons">
+            <button type="button" class="task-type-btn active" data-type="演習課題">演習課題</button>
+            <button type="button" class="task-type-btn" data-type="予習課題">予習課題</button>
+            <button type="button" class="task-type-btn" data-type="追加演習">追加演習</button>
+          </div>
+        </div>
+        <div class="form-group">
           <label for="taskContent">内容</label>
-          <input type="text" id="taskContent" required>
+          <input type="text" id="taskContent">
         </div>
         <div class="form-group">
           <label>期限</label>
           <div class="date-buttons">
-            <button type="button" onclick="setDate('today')">今日</button>
-            <button type="button" onclick="setDate('tomorrow')">明日</button>
-            <button type="button" onclick="setDate('nextWeek')">来週</button>
+            <button type="button" onclick="setDate('previous')">前日</button>
+            <button type="button" onclick="setDate('current')">当日</button>
+            <button type="button" onclick="setDate('next')">後日</button>
+            <button type="button" onclick="setDate('nextWeek')">次週</button>
           </div>
           <input type="date" id="taskDate" required>
         </div>
