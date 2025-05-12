@@ -1160,7 +1160,7 @@
       max-width: 600px;
       max-height: 80vh;
       overflow-y: auto;
-      animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      /* animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); */
     }
 
     .task-popup-header {
@@ -1458,12 +1458,12 @@
 
     /* モーダルのアニメーション */
     .modal {
-      /* animation: fadeIn 0.2s ease-out; */ /* アニメーション削除 */
+      animation: fadeIn 0.2s ease-out; /* アニメーション削除 */
     }
 
-    .modal-content {
-      /* animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); */ /* アニメーション削除 */
-    }
+    /* .modal-content {
+      animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* アニメーション削除 
+    } */
 
     /* ボタンのアニメーション */
     .task-type-btn,
@@ -1483,7 +1483,7 @@
       box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
     }
 
-    /* タスク数バッジのアニメーション */
+    タスク数バッジのアニメーション
     .number-circle {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -1570,8 +1570,9 @@
     .task-details,
     .task-meta,
     .task-items {
-      animation: fadeIn 0.3s ease-out 0.15s backwards; /* 少し遅れてフェードイン */
+      animation: fadeIn 0.3s ease-out 0.15s backwards; 
     }
+    
   </style>
 </head>
 <body>
