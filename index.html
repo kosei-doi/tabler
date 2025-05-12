@@ -604,7 +604,7 @@
       font-family: sans-serif;
       background-color: #FAFAFA;
       color: #263238;
-      animation: fadeInUp 0.6s ease-out;
+      animation: fadeIn 0.3s ease-out;
     }
 
     .timetable {
@@ -619,7 +619,7 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
       border-radius: 12px;
       overflow: hidden;
-      animation: scaleIn 0.5s ease-out;
+      animation: scaleIn 0.4s ease-out;
     }
 
     .cell {
@@ -632,12 +632,13 @@
       flex-direction: column;
       position: relative;
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .cell:hover {
-      transform: translateY(-4px) scale(1.02);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 1;
     }
 
     .title {
@@ -663,12 +664,12 @@
       justify-content: center;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .number-circle:hover {
-      transform: scale(1.2);
+      transform: scale(1.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
@@ -697,10 +698,10 @@
       background: linear-gradient(
         90deg,
         transparent,
-        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.1),
         transparent
       );
-      animation: shimmer 3s infinite;
+      animation: shimmer 3s infinite linear;
     }
 
     .current-day-header {
@@ -735,7 +736,6 @@
       border: 2px solid #1A237E;
       box-shadow: 0 0 15px rgba(26, 35, 126, 0.2);
       background: linear-gradient(135deg, #E8EAF6, #C5CAE9);
-      animation: pulse 2s infinite;
     }
 
     /* モーダル関連のスタイル */
@@ -748,7 +748,6 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 1000;
-      animation: fadeIn 0.15s ease-out;
     }
 
     .modal-content {
@@ -762,12 +761,6 @@
       width: 80%;
       max-width: 500px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .modal-content:hover {
-      transform: scale(1.01);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
     }
 
     .modal-header {
@@ -819,10 +812,13 @@
       border-radius: 4px;
       background-color: #f8f8f8;
       cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .date-buttons button:hover {
       background-color: #eee;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .form-group select {
@@ -843,10 +839,13 @@
       cursor: pointer;
       font-size: 1em;
       box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .submit-button:hover {
       background-color: #1B5E20;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
     }
 
     @media (min-width: 1024px) {
@@ -932,6 +931,28 @@
       .task-list {
         padding: 0 20px;
       }
+
+      .cell:active {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+      }
+
+      .task-item:active {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+      }
+
+      .task-type-btn:active,
+      .date-buttons button:active,
+      .submit-button:active {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+      }
+
+      .number-circle:active {
+        transform: scale(0.95);
+        transition: transform 0.1s;
+      }
     }
 
     /* タブ関連のスタイル */
@@ -950,32 +971,19 @@
       padding: 15px 30px;
       cursor: pointer;
       border-bottom: 3px solid transparent;
-      transition: all 0.3s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       flex: 1;
       text-align: center;
       max-width: 200px;
-      position: relative;
     }
 
-    .tab::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 0;
-      height: 3px;
-      background: currentColor;
-      transition: width 0.3s ease, left 0.3s ease;
+    .tab.active {
+      border-bottom-color: #2E7D32;
+      color: #2E7D32;
     }
 
-    .tab:hover::after {
-      width: 100%;
-      left: 0;
-    }
-
-    .tab.active::after {
-      width: 100%;
-      left: 0;
+    .tab:hover {
+      background-color: rgba(245, 245, 245, 0.8);
     }
 
     .tab-content {
@@ -1001,13 +1009,13 @@
       margin-bottom: 10px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      transition: transform 0.2s, box-shadow 0.2s;
-      animation: fadeInUp 0.4s ease-out;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: slideUp 0.3s ease-out;
     }
 
     .task-item:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .task-checkbox {
@@ -1015,6 +1023,7 @@
       width: 20px;
       height: 20px;
       cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .task-content {
@@ -1071,8 +1080,8 @@
     }
 
     .completed-tasks .task-item {
-      opacity: 0.8;
-      background: #FAFAFA;
+      opacity: 0.7;
+      text-decoration: line-through;
     }
 
     .task-items {
@@ -1136,7 +1145,7 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 1000;
-      animation: fadeIn 0.15s ease-out;
+      animation: fadeIn 0.2s ease-out;
     }
 
     .task-popup-content {
@@ -1151,12 +1160,7 @@
       max-width: 600px;
       max-height: 80vh;
       overflow-y: auto;
-      animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .task-popup-content:hover {
-      transform: scale(1.01);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+      animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .task-popup-header {
@@ -1203,7 +1207,7 @@
       border-radius: 4px;
       background-color: #F5F5F5;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       color: #424242;
     }
 
@@ -1254,267 +1258,319 @@
       box-shadow: 0 2px 8px rgba(120, 144, 156, 0.3);
     }
 
-    /* モバイル向けの派手なアニメーション */
-    @media (max-width: 1023px) {
-      /* 時間割セルのアニメーション */
-      .cell {
-        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    /* モーダルのスタイルを更新 */
+    .modal-content {
+      background: white;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      border-radius: 16px;
+      border: 1px solid #E0E0E0;
+    }
 
-      .cell:active {
-        transform: scale(0.92) rotate(-1deg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
+    .modal-header {
+      background: linear-gradient(135deg, #1A237E, #283593);
+      color: white;
+      padding: 20px;
+      border-radius: 16px 16px 0 0;
+      margin: -20px -20px 20px -20px;
+    }
 
-      /* タスクカードのアニメーション */
-      .task-item {
-        animation: slideInBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    .modal-header h2 {
+      color: white;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
 
-      .task-item:active {
-        transform: scale(0.95) rotate(1deg);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-      }
+    .modal-header p {
+      color: #E8EAF6;
+    }
 
-      /* タスク完了時のアニメーション */
-      .task-item.completed {
-        animation: completeTask 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    .submit-button {
+      background: linear-gradient(135deg, #43A047, #2E7D32);
+      box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
 
-      /* タスク削除時のアニメーション */
-      .task-item.removing {
-        animation: removeTask 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    .submit-button:hover {
+      background: linear-gradient(135deg, #2E7D32, #1B5E20);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(67, 160, 71, 0.4);
+    }
 
-      /* タスク追加時のアニメーション */
-      .task-item.adding {
-        animation: addTask 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    /* タブの色を更新 */
+    .tabs {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border-bottom: 1px solid #E0E0E0;
+    }
 
-      /* タスク更新時のアニメーション */
-      .task-item.updating {
-        animation: updateTask 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    .tab {
+      color: #455A64;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
 
-      /* タスクチェックボックスのアニメーション */
-      .task-checkbox:active {
-        transform: scale(1.3) rotate(15deg);
-      }
+    .tab:hover {
+      background: #F5F5F5;
+      color: #1A237E;
+    }
 
-      .task-checkbox:checked {
-        animation: checkTask 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    .tab.active {
+      border-bottom-color: #1A237E;
+      color: #1A237E;
+      font-weight: 600;
+    }
 
-      /* タスクタイプボタンのアニメーション */
-      .task-type-btn:active {
-        transform: scale(0.9) rotate(-2deg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      }
+    /* 完了したタスクのセクション */
+    .completed-tasks {
+      background: #F5F5F5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 40px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
 
-      /* 日付ボタンのアニメーション */
-      .date-buttons button:active {
-        transform: scale(0.9) rotate(2deg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      }
+    .completed-tasks h3 {
+      color: #455A64;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
 
-      /* 送信ボタンのアニメーション */
-      .submit-button:active {
-        transform: scale(0.95) rotate(-1deg);
-        box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
-      }
+    .completed-tasks .task-item {
+      opacity: 0.8;
+      background: #FAFAFA;
+    }
 
-      /* タスク数バッジのアニメーション */
-      .number-circle:active {
-        transform: scale(1.2) rotate(10deg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-      }
+    /* フォーム要素のスタイル更新 */
+    .form-group input[type="text"],
+    .form-group select {
+      border: 1px solid #E0E0E0;
+      border-radius: 8px;
+      padding: 10px;
+      transition: all 0.3s ease;
+    }
 
-      /* タスクレベルのアニメーション */
-      .task-level:active,
-      .task-item-tag:active {
-        transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
+    .form-group input[type="text"]:focus,
+    .form-group select:focus {
+      border-color: #1A237E;
+      box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+      outline: none;
+    }
 
-      /* 新しいキーフレームアニメーション */
-      @keyframes slideInBounce {
-        0% {
-          opacity: 0;
-          transform: translateX(-20px) scale(0.9);
-        }
-        70% {
-          transform: translateX(5px) scale(1.05);
-        }
-        100% {
-          opacity: 1;
-          transform: translateX(0) scale(1);
-        }
-      }
+    .date-buttons button {
+      background: #F5F5F5;
+      border: 1px solid #E0E0E0;
+      color: #455A64;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
 
-      @keyframes completeTask {
-        0% {
-          transform: scale(1) rotate(0);
-        }
-        50% {
-          transform: scale(1.05) rotate(2deg);
-        }
-        100% {
-          transform: scale(1) rotate(0);
-        }
-      }
+    .date-buttons button:hover {
+      background: #EEEEEE;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-      @keyframes removeTask {
-        0% {
-          transform: translateX(0) scale(1) rotate(0);
-          opacity: 1;
-        }
-        100% {
-          transform: translateX(50px) scale(0.8) rotate(10deg);
-          opacity: 0;
-        }
-      }
+    /* アニメーションの定義 */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
-      @keyframes addTask {
-        0% {
-          opacity: 0;
-          transform: translateY(-20px) scale(0.9);
-        }
-        70% {
-          transform: translateY(5px) scale(1.05);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
       }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-      @keyframes updateTask {
-        0% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05) rotate(1deg);
-        }
-        100% {
-          transform: scale(1);
-        }
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
       }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
 
-      @keyframes checkTask {
-        0% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.3) rotate(15deg);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
 
-      /* タスクタグのアニメーション */
-      .task-item-tag.adding {
-        animation: addTag 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    /* 基本アニメーション */
+    body {
+      animation: fadeIn 0.3s ease-out;
+    }
 
-      .task-item-tag.removing {
-        animation: removeTag 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    .timetable {
+      animation: scaleIn 0.4s ease-out;
+    }
 
-      @keyframes addTag {
-        0% {
-          opacity: 0;
-          transform: scale(0.5) rotate(-10deg);
-        }
-        70% {
-          transform: scale(1.1) rotate(5deg);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1) rotate(0);
-        }
-      }
+    /* セルのアニメーション */
+    .cell {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-      @keyframes removeTag {
-        0% {
-          opacity: 1;
-          transform: scale(1) rotate(0);
-        }
-        100% {
-          opacity: 0;
-          transform: scale(0.5) rotate(10deg);
-        }
-      }
+    .cell:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 1;
+    }
 
-      /* タスク期限のアニメーション */
-      .due-date.changing {
-        animation: updateDueDate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    /* ヘッダーのアニメーション */
+    .header {
+      position: relative;
+      overflow: hidden;
+    }
 
-      @keyframes updateDueDate {
-        0% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.1) rotate(-2deg);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
+    .header::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+      );
+      animation: shimmer 3s infinite linear;
+    }
 
-      /* タスク内容のアニメーション */
-      .task-details.updating {
-        animation: updateContent 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
+    /* タスクカードのアニメーション */
+    .task-item {
+      animation: slideUp 0.3s ease-out;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-      @keyframes updateContent {
-        0% {
-          opacity: 0.5;
-          transform: translateY(-5px);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* タスクタイトルのアニメーション */
-      .task-title.updating {
-        animation: updateTitle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-
-      @keyframes updateTitle {
-        0% {
-          transform: translateX(-10px) scale(0.95);
-          opacity: 0.5;
-        }
-        100% {
-          transform: translateX(0) scale(1);
-          opacity: 1;
-        }
-      }
+    .task-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     /* モーダルのアニメーション */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
+    .modal {
+      /* animation: fadeIn 0.2s ease-out; */ /* アニメーション削除 */
+    }
+
+    .modal-content {
+      /* animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); */ /* アニメーション削除 */
+    }
+
+    /* ボタンのアニメーション */
+    .task-type-btn,
+    .date-buttons button,
+    .submit-button {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .task-type-btn:hover,
+    .date-buttons button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .submit-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+    }
+
+    /* タスク数バッジのアニメーション */
+    .number-circle {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .number-circle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* タブのアニメーション */
+    .tab {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative; /* 下線アニメーションのため */
+    }
+
+    .tab::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; /* border-bottomを考慮 */
+      left: 0;
+      width: 0;
+      height: 3px;
+      background-color: #1A237E;
+      transition: width 0.25s ease-out;
+    }
+
+    .tab.active::after {
+      width: 100%;
+    }
+
+    .tab:hover {
+      background-color: rgba(245, 245, 245, 0.8);
+    }
+
+    /* モバイル向けのタッチフィードバック */
+    @media (max-width: 1023px) {
+      .cell:active {
+        transform: scale(0.98);
+        transition: transform 0.1s;
       }
-      to {
-        opacity: 1;
+
+      .task-item:active {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+      }
+
+      .task-type-btn:active,
+      .date-buttons button:active,
+      .submit-button:active {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+      }
+
+      .number-circle:active {
+        transform: scale(0.95);
+        transition: transform 0.1s;
       }
     }
 
-    @keyframes popIn {
-      from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
+    /* 完了タスクのアニメーション */
+    .task-item.completed {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .task-item.completed .task-content {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* タスクチェックボックスのアニメーション */
+    .task-checkbox {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .task-checkbox:checked {
+      animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 完了タスクセクションの見出し */
+    .completed-tasks h3 {
+      animation: slideUp 0.4s ease-out 0.1s backwards;
+    }
+
+    /* タスク詳細のアニメーション */
+    .task-details,
+    .task-meta,
+    .task-items {
+      animation: fadeIn 0.3s ease-out 0.15s backwards; /* 少し遅れてフェードイン */
     }
   </style>
 </head>
