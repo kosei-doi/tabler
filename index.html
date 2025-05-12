@@ -45,19 +45,19 @@
 
     // 科目ごとの背景色を定義
     const subjectColors = {
-      'CS': '#e3f2fd',
-      '微分積分': '#e8f5e9',
-      'Cプロ': '#fff3e0',
-      '実験': '#f3e5f5',
-      '線形代数': '#e8f5e9',
-      '中国語IA': '#e0f7fa',
-      '中国語IB': '#e0f7fa',
-      '憲法IB': '#fce4ec',
-      '電磁気学A': '#e8eaf6',
-      '電生': '#ede7f6',
-      '生命科学A': '#f1f8e9',
-      '力学A': '#fff8e1',
-      'ALC': '#e3f2fd'
+      'CS': '#E3F2FD', // 爽やかな水色
+      '微分積分': '#F3E5F5', // ラベンダー
+      'Cプロ': '#FFF8E1', // クリームイエロー
+      '実験': '#E0F7FA', // ターコイズ
+      '線形代数': '#F1F8E9', // ミントグリーン
+      '中国語IA': '#FCE4EC', // ピンク
+      '中国語IB': '#FCE4EC', // ピンク
+      '憲法IB': '#EDE7F6', // ライトパープル
+      '電磁気学A': '#FFF3E0', // アプリコット
+      '電生': '#E8F5E9', // セージグリーン
+      '生命科学A': '#E1F5FE', // スカイブルー
+      '力学A': '#F3E5F5', // ラベンダー
+      'ALC': '#E8EAF6'  // ライトブルー
     };
 
     // 時間割データを初期化する関数
@@ -602,7 +602,9 @@
     body {
       margin: 0;
       font-family: sans-serif;
-      background-color: #f8f8f8;
+      background-color: #FAFAFA;
+      color: #263238;
+      animation: fadeInUp 0.6s ease-out;
     }
 
     .timetable {
@@ -611,12 +613,17 @@
       grid-template-rows: 40px repeat(5, 1fr);
       max-width: 1200px;
       margin: 20px auto;
-      border: 1px solid #ccc;
+      border: 1px solid #E0E0E0;
       aspect-ratio: 6 / 7;
+      background: white;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      animation: scaleIn 0.5s ease-out;
     }
 
     .cell {
-      border: 1px solid #ccc;
+      border: 1px solid #E0E0E0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -625,11 +632,12 @@
       flex-direction: column;
       position: relative;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
     }
 
     .cell:hover {
-      background-color: #f5f5f5;
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .title {
@@ -655,12 +663,13 @@
       justify-content: center;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.2s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .number-circle:hover {
-      transform: scale(1.1);
+      transform: scale(1.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .content {
@@ -670,22 +679,40 @@
     }
 
     .header {
-      background-color: #4CAF50;
+      background: linear-gradient(135deg, #1A237E, #283593);
       color: white;
       font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      animation: shimmer 3s infinite;
     }
 
     .current-day-header {
-      background-color: #388e3c;
+      background: linear-gradient(135deg, #283593, #303F9F);
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
     }
 
     .time {
-      background-color: #e8f5e9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
+      background: #F5F5F5;
+      color: #455A64;
+      font-weight: 500;
+      border-right: 2px solid #E0E0E0;
     }
 
     .period-name {
@@ -705,8 +732,10 @@
     }
 
     .current-period {
-      background-color: #e8f5e9;
-      border: 2px solid #4CAF50;
+      border: 2px solid #1A237E;
+      box-shadow: 0 0 15px rgba(26, 35, 126, 0.2);
+      background: linear-gradient(135deg, #E8EAF6, #C5CAE9);
+      animation: pulse 2s infinite;
     }
 
     /* モーダル関連のスタイル */
@@ -719,6 +748,7 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 1000;
+      animation: fadeIn 0.15s ease-out;
     }
 
     .modal-content {
@@ -732,6 +762,12 @@
       width: 80%;
       max-width: 500px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-content:hover {
+      transform: scale(1.01);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
     }
 
     .modal-header {
@@ -800,16 +836,17 @@
     .submit-button {
       width: 100%;
       padding: 10px;
-      background-color: #4CAF50;
+      background-color: #2E7D32;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 1em;
+      box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2);
     }
 
     .submit-button:hover {
-      background-color: #45a049;
+      background-color: #1B5E20;
     }
 
     @media (min-width: 1024px) {
@@ -917,11 +954,28 @@
       flex: 1;
       text-align: center;
       max-width: 200px;
+      position: relative;
     }
 
-    .tab.active {
-      border-bottom-color: #4CAF50;
-      color: #4CAF50;
+    .tab::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: currentColor;
+      transition: width 0.3s ease, left 0.3s ease;
+    }
+
+    .tab:hover::after {
+      width: 100%;
+      left: 0;
+    }
+
+    .tab.active::after {
+      width: 100%;
+      left: 0;
     }
 
     .tab-content {
@@ -946,7 +1000,14 @@
       background: white;
       margin-bottom: 10px;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    .task-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .task-checkbox {
@@ -985,9 +1046,23 @@
       background: #e0e0e0;
     }
 
-    .task-level-1 { background: #e8f5e9; color: #2e7d32; }
-    .task-level-2 { background: #fff3e0; color: #ef6c00; }
-    .task-level-3 { background: #ffebee; color: #c62828; }
+    .task-level-1 {
+      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+      color: #2E7D32;
+      font-weight: 500;
+    }
+
+    .task-level-2 {
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      color: #EF6C00;
+      font-weight: 500;
+    }
+
+    .task-level-3 {
+      background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+      color: #C62828;
+      font-weight: 500;
+    }
 
     .completed-tasks {
       margin-top: 30px;
@@ -996,8 +1071,8 @@
     }
 
     .completed-tasks .task-item {
-      opacity: 0.7;
-      text-decoration: line-through;
+      opacity: 0.8;
+      background: #FAFAFA;
     }
 
     .task-items {
@@ -1007,7 +1082,9 @@
     }
 
     .task-item-tag {
-      background: #f0f0f0;
+      background: #F5F5F5;
+      color: #455A64;
+      border: 1px solid #E0E0E0;
       padding: 2px 8px;
       border-radius: 12px;
       font-size: 0.8em;
@@ -1020,28 +1097,33 @@
     }
 
     .due-date-today {
-      background-color: #c62828;
+      background: linear-gradient(135deg, #E53935, #C62828);
       color: white;
+      font-weight: 500;
     }
 
     .due-date-tomorrow {
-      background-color: #ef6c00;
+      background: linear-gradient(135deg, #FF9800, #F57C00);
       color: white;
+      font-weight: 500;
     }
 
     .due-date-week {
-      background-color: #1565c0;
+      background: linear-gradient(135deg, #1E88E5, #1565C0);
       color: white;
+      font-weight: 500;
     }
 
     .due-date-overdue {
-      background-color: #b71c1c;
+      background: linear-gradient(135deg, #D32F2F, #B71C1C);
       color: white;
+      font-weight: 500;
     }
 
     .due-date-future {
-      background-color: #9e9e9e;
+      background: linear-gradient(135deg, #78909C, #546E7A);
       color: white;
+      font-weight: 500;
     }
 
     /* タスク一覧ポップアップのスタイル */
@@ -1054,6 +1136,7 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 1000;
+      animation: fadeIn 0.15s ease-out;
     }
 
     .task-popup-content {
@@ -1068,6 +1151,12 @@
       max-width: 600px;
       max-height: 80vh;
       overflow-y: auto;
+      animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .task-popup-content:hover {
+      transform: scale(1.01);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
     }
 
     .task-popup-header {
@@ -1110,49 +1199,322 @@
     .task-type-btn {
       flex: 1;
       padding: 8px;
-      border: 1px solid #ddd;
+      border: 1px solid #E0E0E0;
       border-radius: 4px;
-      background-color: #f8f8f8;
+      background-color: #F5F5F5;
       cursor: pointer;
       transition: all 0.2s;
+      color: #424242;
     }
 
     .task-type-btn.active {
-      background-color: #4CAF50;
+      background-color: #2E7D32;
+      border-color: #2E7D32;
       color: white;
-      border-color: #4CAF50;
+      box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2);
     }
 
     .task-type-演習課題 {
-      border-left: 4px solid #4CAF50;
+      border-left: 4px solid #43A047;
+      background: linear-gradient(to right, #F1F8E9, white);
     }
 
     .task-type-予習課題 {
-      border-left: 4px solid #2196f3;
+      border-left: 4px solid #1E88E5;
+      background: linear-gradient(to right, #E3F2FD, white);
     }
 
     .task-type-追加演習 {
-      border-left: 4px solid #ff9800;
+      border-left: 4px solid #FB8C00;
+      background: linear-gradient(to right, #FFF3E0, white);
     }
 
     .number-circle.due-date-overdue {
-      background-color: #d32f2f;
+      background: linear-gradient(135deg, #D32F2F, #B71C1C);
+      box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
     }
 
     .number-circle.due-date-today {
-      background-color: #f44336;
+      background: linear-gradient(135deg, #E53935, #C62828);
+      box-shadow: 0 2px 8px rgba(229, 57, 53, 0.3);
     }
 
     .number-circle.due-date-tomorrow {
-      background-color: #ff9800;
+      background: linear-gradient(135deg, #FF9800, #F57C00);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
     }
 
     .number-circle.due-date-week {
-      background-color: #2196f3;
+      background: linear-gradient(135deg, #1E88E5, #1565C0);
+      box-shadow: 0 2px 8px rgba(30, 136, 229, 0.3);
     }
 
     .number-circle.due-date-future {
-      background-color: #9e9e9e;
+      background: linear-gradient(135deg, #78909C, #546E7A);
+      box-shadow: 0 2px 8px rgba(120, 144, 156, 0.3);
+    }
+
+    /* モバイル向けの派手なアニメーション */
+    @media (max-width: 1023px) {
+      /* 時間割セルのアニメーション */
+      .cell {
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .cell:active {
+        transform: scale(0.92) rotate(-1deg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      /* タスクカードのアニメーション */
+      .task-item {
+        animation: slideInBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .task-item:active {
+        transform: scale(0.95) rotate(1deg);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      /* タスク完了時のアニメーション */
+      .task-item.completed {
+        animation: completeTask 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* タスク削除時のアニメーション */
+      .task-item.removing {
+        animation: removeTask 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* タスク追加時のアニメーション */
+      .task-item.adding {
+        animation: addTask 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* タスク更新時のアニメーション */
+      .task-item.updating {
+        animation: updateTask 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* タスクチェックボックスのアニメーション */
+      .task-checkbox:active {
+        transform: scale(1.3) rotate(15deg);
+      }
+
+      .task-checkbox:checked {
+        animation: checkTask 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* タスクタイプボタンのアニメーション */
+      .task-type-btn:active {
+        transform: scale(0.9) rotate(-2deg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* 日付ボタンのアニメーション */
+      .date-buttons button:active {
+        transform: scale(0.9) rotate(2deg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* 送信ボタンのアニメーション */
+      .submit-button:active {
+        transform: scale(0.95) rotate(-1deg);
+        box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+      }
+
+      /* タスク数バッジのアニメーション */
+      .number-circle:active {
+        transform: scale(1.2) rotate(10deg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      }
+
+      /* タスクレベルのアニメーション */
+      .task-level:active,
+      .task-item-tag:active {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      /* 新しいキーフレームアニメーション */
+      @keyframes slideInBounce {
+        0% {
+          opacity: 0;
+          transform: translateX(-20px) scale(0.9);
+        }
+        70% {
+          transform: translateX(5px) scale(1.05);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+        }
+      }
+
+      @keyframes completeTask {
+        0% {
+          transform: scale(1) rotate(0);
+        }
+        50% {
+          transform: scale(1.05) rotate(2deg);
+        }
+        100% {
+          transform: scale(1) rotate(0);
+        }
+      }
+
+      @keyframes removeTask {
+        0% {
+          transform: translateX(0) scale(1) rotate(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(50px) scale(0.8) rotate(10deg);
+          opacity: 0;
+        }
+      }
+
+      @keyframes addTask {
+        0% {
+          opacity: 0;
+          transform: translateY(-20px) scale(0.9);
+        }
+        70% {
+          transform: translateY(5px) scale(1.05);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes updateTask {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05) rotate(1deg);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes checkTask {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.3) rotate(15deg);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* タスクタグのアニメーション */
+      .task-item-tag.adding {
+        animation: addTag 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .task-item-tag.removing {
+        animation: removeTag 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes addTag {
+        0% {
+          opacity: 0;
+          transform: scale(0.5) rotate(-10deg);
+        }
+        70% {
+          transform: scale(1.1) rotate(5deg);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) rotate(0);
+        }
+      }
+
+      @keyframes removeTag {
+        0% {
+          opacity: 1;
+          transform: scale(1) rotate(0);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(0.5) rotate(10deg);
+        }
+      }
+
+      /* タスク期限のアニメーション */
+      .due-date.changing {
+        animation: updateDueDate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes updateDueDate {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1) rotate(-2deg);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* タスク内容のアニメーション */
+      .task-details.updating {
+        animation: updateContent 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes updateContent {
+        0% {
+          opacity: 0.5;
+          transform: translateY(-5px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* タスクタイトルのアニメーション */
+      .task-title.updating {
+        animation: updateTitle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes updateTitle {
+        0% {
+          transform: translateX(-10px) scale(0.95);
+          opacity: 0.5;
+        }
+        100% {
+          transform: translateX(0) scale(1);
+          opacity: 1;
+        }
+      }
+    }
+
+    /* モーダルのアニメーション */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
     }
   </style>
 </head>
